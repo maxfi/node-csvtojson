@@ -1,6 +1,7 @@
 function csvtojson() {
   var web = require("../libs/interfaces").web;
   var Converter = require("../libs/core/Converter.js");
+  var addNewLineTransform = require("./addNewLineTransform.js")();
   var fs = require("fs");
   var options = require("./options.json");
   var cmds = options.commands;
@@ -44,12 +45,18 @@ function csvtojson() {
   function parse() {
     var is = parsedCmd.inputStream;
     parsedCmd.options.constructResult = false;
-    parsedCmd.options.toArrayString = true;
+    if (parsedCmd.options.toArrayString === undefined) {
+      parsedCmd.options.toArrayString = true;
+    } 
     if (is === process.stdin && is.isTTY) {
       console.log("Please specify csv file path or pipe the csv data through.\n");
       _showHelp(1);
     }
-    is.pipe(new Converter(parsedCmd.options)).pipe(process.stdout);
+    if (parsedCmd.options.toArrayString) {
+      is.pipe(new Converter(parsedCmd.options)).pipe(process.stdout);
+    } else {
+      is.pipe(new Converter(parsedCmd.options)).pipe(addNewLineTransform).pipe(process.stdout);
+    }
   }
 
   function run(cmd, options) {
